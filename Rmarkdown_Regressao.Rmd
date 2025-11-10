@@ -10,28 +10,59 @@ Portanto, guiaremos nosso projeto pelas seguintes informações:
 
 * **Variável resposta (Y):** `total_sleep` (Horas totais de sono)
 * **Variáveis Explicativas (X):**
-    * `danger` (Índice de perigo)
-    * `body_wt` (Peso corporal)
-    * `life_span` (Expectativa de vida)
-    * `gestation` (Tempo de gestação)
+    *`species` – Espécie do mamífero.
+
+    *`body_wt` – Peso corporal total do mamífero (em kg).
+
+    *`brain_wt` – Peso do cérebro do mamífero (em kg).
+
+    *`non_dreaming` – Número médio de horas de sono sem sonhos por dia.
+
+     *`dreaming` – Número médio de horas de sono com sonhos por dia.
+
+     *`total_sleep` – Total de horas de sono por dia (soma de dreaming e non_dreaming).
+
+     *`life_span` – Expectativa de vida do mamífero (em anos).
+
+     *`gestation` – Duração média da gestação (em dias).
+
+     *`predation` – Índice de probabilidade de o mamífero ser predado.
+      1 = menos provável de ser predado,
+      5 = mais provável de ser predado
+
+     *`exposure` – Índice de exposição do mamífero durante o sono.
+  
+    1 = menos exposto (por exemplo, dorme em um abrigo protegido)
     
+    5 = mais exposto (por exemplo, dorme em local aberto)
+
+     *`danger` – Índice geral de perigo enfrentado por predadores.
+
+    Baseado nos índices predation e exposure
+    
+    1 = menor perigo
+    
+    5 = maior perigo
+      
 ```{r setup-e-carga}
 
+install.packages("readr")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("tidyr")
 library(readr)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
 
 mammals <- read_csv("dataset/mammals.csv")
-
 ```
 ```{r limpeza}
 mammals_clean <- mammals %>%
-  drop_na(total_sleep, dreaming, non_dreaming, danger, body_wt, life_span, gestation)
-
+  drop_na(species, body_wt, brain_wt, non_dreaming, dreaming, 
+          total_sleep, life_span, gestation, predation, exposure, danger)
 ```
 
 ```{r}
-summary(mammals_clean)
+summary(mammals)
 ```
-
