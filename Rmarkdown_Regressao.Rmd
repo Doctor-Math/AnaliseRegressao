@@ -1,51 +1,26 @@
 ---
-title: "AnaliseRegressao"
+title: "Analise de Regressao: Sono em Mamiferos"
 output: html_document
 date: "2025-11-10"
 ---
-# **Introdução**
+# 📚 Introdução
+Este trabalho consiste em analisar o **tempo total de sono dos mamíferos** (`total_sleep`), buscando compreender quais variáveis biológicas e comportamentais explicam essa característica.
 
-Esse trabalho consiste em analisar o tempo total de sono dos mamíferos, buscando compreender o que explica tal variável. 
-Portanto, guiaremos nosso projeto pelas seguintes informações:
+* **Variável Resposta (Y):** `total_sleep` (Horas totais de sono por dia).
+* **Variáveis Explicativas (X) Consideradas:**
 
-* **Variável resposta (Y):** `total_sleep` (Horas totais de sono)
-* **Variáveis Explicativas (X):**
-    *`species` – Espécie do mamífero.
-
-    *`body_wt` – Peso corporal total do mamífero (em kg).
-
-    *`brain_wt` – Peso do cérebro do mamífero (em kg).
-
-    *`non_dreaming` – Número médio de horas de sono sem sonhos por dia.
-
-     *`dreaming` – Número médio de horas de sono com sonhos por dia.
-
-     *`total_sleep` – Total de horas de sono por dia (soma de dreaming e non_dreaming).
-
-     *`life_span` – Expectativa de vida do mamífero (em anos).
-
-     *`gestation` – Duração média da gestação (em dias).
-
-     *`predation` – Índice de probabilidade de o mamífero ser predado.
-      1 = menos provável de ser predado,
-      5 = mais provável de ser predado
-
-     *`exposure` – Índice de exposição do mamífero durante o sono.
-  
-    1 = menos exposto (por exemplo, dorme em um abrigo protegido)
-    
-    5 = mais exposto (por exemplo, dorme em local aberto)
-
-     *`danger` – Índice geral de perigo enfrentado por predadores.
-
-    Baseado nos índices predation e exposure
-    
-    1 = menor perigo
-    
-    5 = maior perigo
-      
+    * `species` – Espécie do mamífero.
+    * `body_wt` – Peso corporal total do mamífero (em kg).
+    * `brain_wt` – Peso do cérebro do mamífero (em kg).
+    * `life_span` – Expectativa de vida do mamífero (em anos).
+    * `gestation` – Duração média da gestação (em dias).
+    * `predation` – Índice de probabilidade de o mamífero ser predado.
+        * 1 = menos provável de ser predado, 5 = mais provável de ser predado.
+    * `exposure` – Índice de exposição do mamífero durante o sono.
+        * 1 = menos exposto (ex.: dorme em abrigo), 5 = mais exposto (ex.: dorme em local aberto).
+    * `danger` – Índice geral de perigo enfrentado, baseado nos índices `predation` e `exposure`.
+        * 1 = menor perigo, 5 = maior perigo.    
 ```{r setup-e-carga}
-
 install.packages("readr")
 install.packages("car")
 install.packages("dplyr")
@@ -59,18 +34,17 @@ library(tidyr)
 
 mammals <- read_csv("dataset/mammals.csv")
 ```
+
 ```{r limpeza}
 mammals_clean <- mammals %>%
   drop_na(species, body_wt, brain_wt, non_dreaming, dreaming, 
           total_sleep, life_span, gestation, predation, exposure, danger)
 ```
----
 # Estatísticas descritivas
 
 ```{r}
 summary(mammals)
 ```
----
 # Testando se há correlação entre as variáveis explicativas (Indício de Multicolinearidade)
 
 ```{r}
@@ -94,7 +68,6 @@ cor.test(mammals_clean$predation, mammals_clean$exposure, method = "pearson")
 #Testando se há correlação linear entre as variáveis predation e danger
 cor.test(mammals_clean$predation, mammals_clean$danger, method = "pearson")
 ```
----
 # Correlação entre a variável resposta e cada variável independente.
 
 ```{r}
@@ -105,7 +78,7 @@ cor.test(mammals_clean$total_sleep, mammals_clean$danger, method = "pearson")
 #Testando se há correlação linear entre as variáveis total_sleep e exposure
 cor.test(mammals_clean$total_sleep, mammals_clean$exposure, method = "pearson")
 ```
-```{r}
+```{r} 
 #Testando se há correlação linear entre as variáveis total_sleep e dreaming
 cor.test(mammals_clean$total_sleep, mammals_clean$dreaming, method = "pearson")
 ```
@@ -155,7 +128,6 @@ corrplot(
   cl.pos = "r"          
 )
 ```
----
 # Histogramas das variáveis numéricas
 ```{r}
 numeric_vars <- mammals_clean |> dplyr::select(-species)
@@ -168,7 +140,6 @@ for(col in names(numeric_vars)){
   )
 }
 ```
----
 # Boxplot das variáveis numéricas para ver outliers
 ```{r}
 for(col in names(numeric_vars)){
@@ -179,7 +150,6 @@ for(col in names(numeric_vars)){
   )
 }
 ```
----
 # Regressão Linear Múltipla
 
 Como dreaming e non_dreaming são perfeitas preditoras de total_sleep, iremos retirá-las para geração do modelo.
@@ -190,7 +160,6 @@ model_full <- lm(total_sleep ~ body_wt + brain_wt + life_span +
                  data = mammals_clean)
 summary(model_full)
 ```
-
 
 ```{r}
 library(car)
@@ -222,5 +191,4 @@ summary(model3)
 ```{r}
 vif(model3)
 ```
-
 Agora os VIFs diminuiram significativamente e todos estão abaixo de 5, mas o R2 ajustado também diminuiu, o que não é um bom sinal.
