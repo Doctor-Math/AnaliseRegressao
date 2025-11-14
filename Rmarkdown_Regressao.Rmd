@@ -45,6 +45,19 @@ mammals_clean <- mammals %>%
 ```{r}
 summary(mammals)
 ```
+Dado que estamso tratando de regressão, é desejável que nossa variável resposta siga a distribuição normal, dado que isso aumentari as chances dos nossos erros também serem normais. Portanto, é válido, começar analisando isso.
+```{r}
+print(
+    ggplot(mammals_clean, aes_string('total_sleep')) +
+      geom_histogram(bins = 20) +
+      ggtitle(paste("Histograma de total_spleep"))
+  )
+```
+
+O histograma do total_sleep mostra que os dados não têm uma distribuição normal ("curva de sino") e parecem ter vários picos (multimodal), sugerindo que há subgrupos diferentes de mamíferos.
+
+Isso não é um problema agora, mas reforça que, depois de criar o modelo, será fundamental verificar se os resíduos (os erros) são normais, pois essa é a suposição principal da regressão.
+
 # Testando se há correlação entre as variáveis explicativas (Indício de Multicolinearidade)
 
 ```{r}
@@ -191,4 +204,77 @@ summary(model3)
 ```{r}
 vif(model3)
 ```
-Agora os VIFs diminuiram significativamente e todos estão abaixo de 5, mas o R2 ajustado também diminuiu, o que não é um bom sinal.
+Agora os VIFs diminuiram significativamente e todos estão abaixo de 5, mas o R2 ajustado também diminuiu ( caindo de **0.58**, para **0.47**), o que não é um bom sinal.
+
+Tendo tal resultado em mente, vamso tetar modelos mais robustos para escolher as nossas variáveis.
+## * **StepWise:** usa uma métrica chamada AIC (Critério de Informação de Akaike) para decidir quais variáveis ficam e quais saem do modelo.
+
+```{r stepwise-selection}
+# Começamos com o modelo completo que você já criou
+model_full <- lm(total_sleep ~ body_wt + brain_wt + life_span +
+                   gestation + predation + exposure + danger, 
+                 data = mammals_clean)
+
+# Agora, pedimos ao R para "otimizar" esse modelo
+# ele vai tentar ADICIONAR e REMOVER variáveis
+model_stepwise <- step(model_full, direction = "both")
+
+print("--- Resultado do Modelo Otimizado (Stepwise) ---")
+summary(model_stepwise)
+
+```
+
+Dado os resultados acima, vamos verificar o VIF do modelo.
+```{r}
+vif_stepwise <- vif(model_stepwise)
+print(vif_stepwise)
+```
+```{r stepwise ajustado}
+model_final_lasso <- lm(total_sleep ~ gestation + body_wt + predation, 
+                        data = mammals_clean)
+vif(model_final_lasso)
+summary(model_final_lasso)
+```
+
+
+### **Conclusão StepWise:** Ainda que o R^2 ajustado do modelo tenha melhorado, inicialmente, o método em questao não tratou a multicolinearidade, visto que ele foi contruído para se "preocupar" com com AIC do modleo, e não com o VIF. para tirar as dúvidas de qual o melhor modelo, rodamos uma versão final do stepwise, retiando a variavel `danger` que antes estava com maior VIF, obtendo um R^2 ajustado de **0.48** (veremos logo em seguida que o LASSO foi melhor).
+
+
+## * **LASSO:** é considerado um método mais moderno e robusto para fazer seleção de variáveis, especialmente quando temos multicolinearidade. Além disso, esse método funciona penalizndo os coeficientes, utilizando um certo *alpha*. Para escolher o melhor parâmetro, utilizamos **Validação Cruzada**.
+```{r LASSO}
+library(glmnet)
+
+# 2. Preparar os dados para o glmnet
+# Ele não aceita a fórmula "Y ~ X", ele quer Matrizes
+# Criamos a matriz de preditores (X)
+x <- model.matrix(total_sleep ~ body_wt + brain_wt + life_span +
+                     gestation + predation + exposure + danger, 
+                   data = mammals_clean)[, -1] # [, -1] remove o "intercept"
+
+y <- mammals_clean$total_sleep
+
+# 3. Rodar o LASSO (usando Cross-Validation para achar o 'lambda' ideal)
+# alpha = 1 significa LASSO (alpha = 0 seria Ridge)
+cv_lasso <- cv.glmnet(x, y, alpha = 1)
+plot(cv_lasso)
+# 4. Ver os resultados
+print("--- Coeficientes do Modelo LASSO ---")
+# Ver os coeficientes no "lambda" (penalidade) ideal
+coef(cv_lasso, s = "lambda.min")
+
+```
+
+```{r VIF LASSO}
+model_final_lasso <- lm(total_sleep ~ gestation + danger, 
+                        data = mammals_clean)
+vif(model_final_lasso)
+summary(model_final_lasso)
+```
+
+### **Conclusão LASSO:** O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Além de contar com um R^2 ajustado melhor que os anteriores.
+
+```{r modelo ajustado}
+model_final <- model_final_lasso
+
+```
+
