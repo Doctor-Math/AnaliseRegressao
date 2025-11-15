@@ -229,15 +229,9 @@ Dado os resultados acima, vamos verificar o VIF do modelo.
 vif_stepwise <- vif(model_stepwise)
 print(vif_stepwise)
 ```
-```{r stepwise ajustado}
-model_final_lasso <- lm(total_sleep ~ gestation + body_wt + predation, 
-                        data = mammals_clean)
-vif(model_final_lasso)
-summary(model_final_lasso)
-```
 
 
-### **Conclusão StepWise:** Ainda que o R^2 ajustado do modelo tenha melhorado, inicialmente, o método em questao não tratou a multicolinearidade, visto que ele foi contruído para se "preocupar" com com AIC do modleo, e não com o VIF. para tirar as dúvidas de qual o melhor modelo, rodamos uma versão final do stepwise, retiando a variavel `danger` que antes estava com maior VIF, obtendo um R^2 ajustado de **0.48** (veremos logo em seguida que o LASSO foi melhor).
+## **Conclusão StepWise:** Ainda que o R^2 ajustado do modelo tenha melhorado, inicialmente, o método em questao não tratou a multicolinearidade, visto que ele foi contruído para se "preocupar" com com AIC do modleo, e não com o VIF. para tirar as dúvidas de qual o melhor modelo, rodamos uma versão final do stepwise, retiando a variavel `danger` que antes estava com maior VIF, obtendo um R^2 ajustado de **0.48** (veremos logo em seguida que o LASSO foi melhor).
 
 
 ## * **LASSO:** é considerado um método mais moderno e robusto para fazer seleção de variáveis, especialmente quando temos multicolinearidade. Além disso, esse método funciona penalizndo os coeficientes, utilizando um certo *alpha*. Para escolher o melhor parâmetro, utilizamos **Validação Cruzada**.
@@ -271,7 +265,7 @@ vif(model_final_lasso)
 summary(model_final_lasso)
 ```
 
-### **Conclusão LASSO:** O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Além de contar com um R^2 ajustado melhor que os anteriores.
+## **Conclusão LASSO:** O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Além de contar com um R^2 ajustado melhor que os anteriores.
 
 ```{r modelo ajustado}
 model_final <- model_final_lasso
