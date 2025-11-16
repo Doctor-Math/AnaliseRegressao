@@ -284,7 +284,7 @@ summary(model_final_lasso)
 ```
 
 # Conclusão LASSO
-O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Além de contar com um R^2 ajustado melhor que os anteriores.
+O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Os coeficientes tanto de danger quanto gestation são estatisticamente significantes. Além de contar com um R^2 ajustado melhor que os anteriores.
 
 ```{r modelo ajustado}
 model_final <- model_final_lasso
