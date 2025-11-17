@@ -367,6 +367,7 @@ shapiro.test(residuals(model_box)) # p-valor > 0.05
 # Conclusão Geral da Transformação Box-Cox
 Heterocedasticidade: Melhorou significativamente e foi resolvida.
 Normalidade: ERROS CONTINUAM SEGUINDO DISTRIBUIÇÃO NORMAL
+Não parece haver padrão no gráfico Residuos vs Valores Preditos
 
 (Transformação Box–Cox ajudou)
 
