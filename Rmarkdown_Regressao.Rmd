@@ -307,18 +307,7 @@ shapiro.test(residuals(model_final)) # p-valor > 0.05
 ```
 Tendo esses dados em mente, podemos assumir que os erros seguem uma distribuição Normal.
 
-# Autocorrelação entre os erros - Teste de Durbin-Watson
 
-```{r}
-car::durbinWatsonTest(model_final, max.lag = 1)
-```
-Como o p-valor é menor do que 0.05, rejeitamos H0 e supomos que há correlação entre os erros, mas não muito forte pois a estatística de teste D está próxima de 2.
-
-Relembrando:
-• 𝐷 ≈ 2: Não há autocorrelação.
-• 𝐷 ≈ 0: Autocorrelação positiva.
-• 𝐷 ≈ 4: Autocorrelação negativa.
- 
 # Resíduos VS Valores Ajustados
 ```{r}
 par(mfrow = c(1,1))
@@ -366,7 +355,6 @@ qqPlot(model_box,
        envelope = 0.95,
        main = "QQ-Plot com Envelope de 95% de Confiança")
 bptest(model_box)
-dwtest(model_box)
 ```
 
 ```{r}
@@ -377,10 +365,11 @@ plot(model_box, which = 1)
 shapiro.test(residuals(model_box)) # p-valor > 0.05
 ```
 # Conclusão Geral da Transformação Box-Cox
-Heterocedasticidade: RESOLVIDA
-
+Heterocedasticidade: Melhorou significativamente e foi resolvida.
 Normalidade: ERROS CONTINUAM SEGUINDO DISTRIBUIÇÃO NORMAL
 
 (Transformação Box–Cox ajudou)
 
-Autocorrelação dos resíduos: AINDA PRESENTE
+O modelo foi o que melhor se adequou aos dados.
+
+Agora que já criamos um modelo explicativo, falta criar um modelo preditivo, separando os dados em conjuntos de treino e teste. Treinando com o conjunto de treino e aplicando validação cruzada para avaliar a performance. Depois avaliar a performance final com o conjunto de teste.
