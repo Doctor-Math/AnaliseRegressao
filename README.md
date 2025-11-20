@@ -130,8 +130,6 @@ A validação buscou medir:
 * R²,
   para comparar diferentes modelos preditivos.
 
-(Demais detalhes podem ser adicionados se o notebook for complementado.)
-
 ---
 
 ## ✅ Conclusão Final
