@@ -2,53 +2,94 @@
 title: "Análise de Regressão: Sono em Mamíferos"
 output: html_document
 date: "16-11-2025"
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
 # Membros do Grupo
-Carolina Penido Barcellos, Gabrielly Xavier dos Santos e Matheus Soares dos Santos de Freitas.
+
+Carolina Penido Barcellos, Gabrielly Xavier dos Santos e Matheus Soares
+dos Santos de Freitas.
 
 # Introdução
-Este trabalho consiste em analisar o **tempo total de sono dos mamíferos** (`total_sleep`), buscando compreender quais variáveis biológicas e comportamentais explicam essa característica.
 
-* **Variável Resposta (Y):** `total_sleep` (Horas totais de sono por dia).
-* **Variáveis Explicativas (X) Consideradas:**
+Este trabalho consiste em analisar o **tempo total de sono dos
+mamíferos** (`total_sleep`), buscando compreender quais variáveis
+biológicas e comportamentais explicam essa característica.
 
-    * `species` – Espécie do mamífero.
-    * `body_wt` – Peso corporal total do mamífero (em kg).
-    * `brain_wt` – Peso do cérebro do mamífero (em kg).
-    * `life_span` – Expectativa de vida do mamífero (em anos).
-    * `gestation` – Duração média da gestação (em dias).
-    * `predation` – Índice de probabilidade de o mamífero ser predado.
-        * 1 = menos provável de ser predado, 5 = mais provável de ser predado.
-    * `exposure` – Índice de exposição do mamífero durante o sono.
-        * 1 = menos exposto (ex.: dorme em abrigo), 5 = mais exposto (ex.: dorme em local aberto).
-    * `danger` – Índice geral de perigo enfrentado, baseado nos índices `predation` e `exposure`.
-        * 1 = menor perigo, 5 = maior perigo.    
-```{r setup-e-carga}
-install.packages("readr")
-install.packages("car")
-install.packages("dplyr")
-install.packages("ggplot2")
-install.packages("tidyr")
+-   **Variável Resposta (Y):** `total_sleep` (Horas totais de sono por
+    dia).
+
+-   **Variáveis Explicativas (X) Consideradas:**
+
+    -   `species` – Espécie do mamífero.
+
+    -   `body_wt` – Peso corporal total do mamífero (em kg).
+
+    -   `brain_wt` – Peso do cérebro do mamífero (em kg).
+
+    -   `life_span` – Expectativa de vida do mamífero (em anos).
+
+    -   `gestation` – Duração média da gestação (em dias).
+
+    -   `predation` – Índice de probabilidade de o mamífero ser predado.
+
+        -   1 = menos provável de ser predado, 5 = mais provável de ser
+            predado.
+
+    -   `exposure` – Índice de exposição do mamífero durante o sono.
+
+        -   1 = menos exposto (ex.: dorme em abrigo), 5 = mais exposto
+            (ex.: dorme em local aberto).
+
+    -   `danger` – Índice geral de perigo enfrentado, baseado nos
+        índices `predation` e `exposure`.
+
+        -   1 = menor perigo, 5 = maior perigo.\
+
+        ```{r setup-e-carga}
+        install.packages("readr")
+        install.packages("car")
+        install.packages("dplyr")
+        install.packages("ggplot2")
+        install.packages("tidyr")
+        library(car)
+        library(readr)
+        library(dplyr)
+        library(ggplot2)
+        library(tidyr)
+
+        mammals <- read_csv("dataset/mammals.csv")
+        ```
+
+```{r}
+# Bibliotecas importantes
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 library(car)
 library(readr)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
-mammals <- read_csv("dataset/mammals.csv")
 ```
+
 
 ```{r limpeza}
 mammals_clean <- mammals %>%
   drop_na(species, body_wt, brain_wt, non_dreaming, dreaming, 
           total_sleep, life_span, gestation, predation, exposure, danger)
 ```
+
 # Estatísticas descritivas
 
 ```{r}
 summary(mammals)
 ```
-Dado que estamso tratando de regressão, é desejável que nossa variável resposta siga a distribuição normal, dado que isso aumentaria as chances dos nossos erros também serem normais. Portanto, é válido, começar analisando isso.
+
+Dado que estamso tratando de regressão, é desejável que nossa variável
+resposta siga a distribuição normal, dado que isso aumentaria as chances
+dos nossos erros também serem normais. Portanto, é válido, começar
+analisando isso.
+
 ```{r}
 print(
     ggplot(mammals_clean, aes_string('total_sleep')) +
@@ -57,9 +98,13 @@ print(
   )
 ```
 
-O histograma do total_sleep mostra que os dados não têm uma distribuição normal ("curva de sino") e parecem ter vários picos (multimodal), sugerindo que há subgrupos diferentes de mamíferos.
+O histograma do total_sleep mostra que os dados não têm uma distribuição
+normal ("curva de sino") e parecem ter vários picos (multimodal),
+sugerindo que há subgrupos diferentes de mamíferos.
 
-Isso não é um problema agora, mas reforça que, depois de criar o modelo, será fundamental verificar se os resíduos (os erros) são normais, pois essa é a suposição principal da regressão.
+Isso não é um problema agora, mas reforça que, depois de criar o modelo,
+será fundamental verificar se os resíduos (os erros) são normais, pois
+essa é a suposição principal da regressão.
 
 # Testando se há correlação entre as variáveis explicativas (Indício de Multicolinearidade)
 
@@ -68,36 +113,44 @@ Isso não é um problema agora, mas reforça que, depois de criar o modelo, ser�
 cor.test(mammals_clean$body_wt, mammals_clean$brain_wt, method = "pearson")
 
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis exposure e danger
 cor.test(mammals_clean$exposure, mammals_clean$danger, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis dreaming e non_dreaming
 cor.test(mammals_clean$dreaming, mammals_clean$non_dreaming, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis predation e exposure
 cor.test(mammals_clean$predation, mammals_clean$exposure, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis predation e danger
 cor.test(mammals_clean$predation, mammals_clean$danger, method = "pearson")
 ```
+
 # Correlação entre a variável resposta e cada variável independente.
 
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e danger
 cor.test(mammals_clean$total_sleep, mammals_clean$danger, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e exposure
 cor.test(mammals_clean$total_sleep, mammals_clean$exposure, method = "pearson")
 ```
-```{r} 
+
+```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e dreaming
 cor.test(mammals_clean$total_sleep, mammals_clean$dreaming, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e non_dreaming
 cor.test(mammals_clean$total_sleep, mammals_clean$non_dreaming, method = "pearson")
@@ -107,17 +160,16 @@ cor.test(mammals_clean$total_sleep, mammals_clean$non_dreaming, method = "pearso
 #Testando se há correlação linear entre as variáveis total_sleep e body_wt
 cor.test(mammals_clean$total_sleep, mammals_clean$body_wt, method = "pearson")
 ```
+
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e brain_wt
 cor.test(mammals_clean$total_sleep, mammals_clean$brain_wt, method = "pearson")
 ```
 
-
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e predation
 cor.test(mammals_clean$total_sleep, mammals_clean$predation, method = "pearson")
 ```
-
 
 ```{r}
 #Testando se há correlação linear entre as variáveis total_sleep e life_span
@@ -128,7 +180,9 @@ cor.test(mammals_clean$total_sleep, mammals_clean$life_span, method = "pearson")
 #Testando se há correlação linear entre as variáveis total_sleep e gestation
 cor.test(mammals_clean$total_sleep, mammals_clean$gestation, method = "pearson")
 ```
+
 #Heatmap de correlação
+
 ```{r}
 library(corrplot)
 
@@ -144,7 +198,9 @@ corrplot(
   cl.pos = "r"          
 )
 ```
+
 # Histogramas das variáveis numéricas
+
 ```{r}
 numeric_vars <- mammals_clean |> dplyr::select(-species)
 
@@ -156,7 +212,9 @@ for(col in names(numeric_vars)){
   )
 }
 ```
+
 # Boxplot das variáveis numéricas para ver outliers
+
 ```{r}
 for(col in names(numeric_vars)){
   print(
@@ -166,9 +224,11 @@ for(col in names(numeric_vars)){
   )
 }
 ```
+
 # Regressão Linear Múltipla
 
-Como dreaming e non_dreaming são perfeitas preditoras de total_sleep, iremos retirá-las para geração do modelo.
+Como dreaming e non_dreaming são perfeitas preditoras de total_sleep,
+iremos retirá-las para geração do modelo.
 
 ```{r}
 model_full <- lm(total_sleep ~ body_wt + brain_wt + life_span +
@@ -181,7 +241,11 @@ summary(model_full)
 library(car)
 vif(model_full)
 ```
-A partir da análise dos VIFs percebemos que danger, predation,brain_wt e body_wt possuem VIFs muito altos (>10), o que indica fortes sinais de multicolinearidade problemática no modelo. Portanto, iremos remover a variável com maior VIF (brain_wt), ajustar e testar o modelo novamente.
+
+A partir da análise dos VIFs percebemos que danger, predation,brain_wt e
+body_wt possuem VIFs muito altos (\>10), o que indica fortes sinais de
+multicolinearidade problemática no modelo. Portanto, iremos remover a
+variável com maior VIF (brain_wt), ajustar e testar o modelo novamente.
 
 ```{r}
 model2 <- lm(total_sleep ~ body_wt + life_span +
@@ -189,6 +253,7 @@ model2 <- lm(total_sleep ~ body_wt + life_span +
                  data = mammals_clean)
 summary(model2)
 ```
+
 ```{r}
 vif(model2)
 ```
@@ -207,12 +272,19 @@ summary(model3)
 ```{r}
 vif(model3)
 ```
-Agora os VIFs diminuiram significativamente e todos estão abaixo de 5, mas o R2 ajustado também diminuiu ( caindo de **0.58**, para **0.47**), o que não é um bom sinal.
 
-Tendo tal resultado em mente, vamso tetar modelos mais robustos para escolher as nossas variáveis.
+Agora os VIFs diminuiram significativamente e todos estão abaixo de 5,
+mas o R2 ajustado também diminuiu ( caindo de **0.58**, para **0.47**),
+o que não é um bom sinal.
+
+Tendo tal resultado em mente, vamso tetar modelos mais robustos para
+escolher as nossas variáveis.
 
 # StepWise
-Usa uma métrica chamada AIC (Critério de Informação de Akaike) para decidir quais variáveis ficam e quais saem do modelo. Quanto menor o AIC, melhor.
+
+Usa uma métrica chamada AIC (Critério de Informação de Akaike) para
+decidir quais variáveis ficam e quais saem do modelo. Quanto menor o
+AIC, melhor.
 
 ```{r stepwise-selection}
 # Começamos com o modelo completo que você já criou
@@ -230,27 +302,42 @@ summary(model_stepwise)
 ```
 
 Dado os resultados acima, vamos verificar o VIF do modelo.
+
 ```{r}
 vif_stepwise <- vif(model_stepwise)
 print(vif_stepwise)
 ```
 
+# Conclusão StepWise
 
-# Conclusão StepWise 
-Ainda que o R^2 ajustado do modelo tenha melhorado, inicialmente, o método em questao não tratou a multicolinearidade, visto que ele foi contruído para se "preocupar" com com AIC do modleo, e não com o VIF. para tirar as dúvidas de qual o melhor modelo, rodamos uma versão final do stepwise, retiando a variavel `danger` que antes estava com maior VIF, obtendo um R^2 ajustado de **0.48** (veremos logo em seguida que o LASSO foi melhor).
-
+Ainda que o R\^2 ajustado do modelo tenha melhorado, inicialmente, o
+método em questao não tratou a multicolinearidade, visto que ele foi
+contruído para se "preocupar" com com AIC do modleo, e não com o VIF.
+para tirar as dúvidas de qual o melhor modelo, rodamos uma versão final
+do stepwise, retiando a variavel `danger` que antes estava com maior
+VIF, obtendo um R\^2 ajustado de **0.48** (veremos logo em seguida que o
+LASSO foi melhor).
 
 # LASSO
-É considerado um método mais moderno e robusto para fazer seleção de variáveis, especialmente quando temos multicolinearidade. Além disso, esse método funciona penalizando os coeficientes, utilizando um certo *alpha*. Para escolher o melhor parâmetro, utilizamos **Validação Cruzada**.
 
-Relembrando LASSO:
-A Regressão LASSO (Least Absolute Shrinkage and Selection Operator) é uma das técnicas de penalização mais populares. Ela encolhe os coeficientes das variáveis menos importantes em direção a zero. a característica especial do LASSO é que, para um 𝜆suficientemente grande, ele pode encolher os coeficientes de algumas variáveis exatamente para zero, realizando assim a seleção de variáveis de forma automática.
-Ela minimiza a soma dos quadrados dos erros (como na regressão usual), mas com uma restrição adicional:
+É considerado um método mais moderno e robusto para fazer seleção de
+variáveis, especialmente quando temos multicolinearidade. Além disso,
+esse método funciona penalizando os coeficientes, utilizando um certo
+*alpha*. Para escolher o melhor parâmetro, utilizamos **Validação
+Cruzada**.
+
+Relembrando LASSO: A Regressão LASSO (Least Absolute Shrinkage and
+Selection Operator) é uma das técnicas de penalização mais populares.
+Ela encolhe os coeficientes das variáveis menos importantes em direção a
+zero. a característica especial do LASSO é que, para um 𝜆suficientemente
+grande, ele pode encolher os coeficientes de algumas variáveis
+exatamente para zero, realizando assim a seleção de variáveis de forma
+automática. Ela minimiza a soma dos quadrados dos erros (como na
+regressão usual), mas com uma restrição adicional:
 
 $$
 \min_{\beta_0, \beta_1, \ldots, \beta_k} \left\{ \sum_{i=1}^{n} \left(y_i - \beta_0 - \sum_{j=1}^{k} x_{ij}\beta_j\right)^2 + \lambda \sum_{j=1}^{k} |\beta_j| \right\}
-$$
-O parâmetro de penalidade 𝜆 controla a força do encolhimento.
+$$ O parâmetro de penalidade 𝜆 controla a força do encolhimento.
 
 ```{r LASSO}
 library(glmnet)
@@ -277,14 +364,18 @@ print(cv_lasso$lambda.min)
 ```
 
 ```{r VIF LASSO}
-model_final_lasso <- lm(total_sleep ~ gestation + danger, 
+model_final_lasso <- lm(total_sleep ~ gestation + danger + life_span, 
                         data = mammals_clean)
 vif(model_final_lasso)
 summary(model_final_lasso)
 ```
 
 # Conclusão LASSO
-O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`, que é muito mais simples (o que é desejável) e robusto. Os coeficientes tanto de danger quanto gestation são estatisticamente significantes. Além de contar com um R^2 ajustado melhor que os anteriores.
+
+O LASSO produziu um modelo final, `total_sleep ~ gestation + danger`,
+que é muito mais simples (o que é desejável) e robusto. Os coeficientes
+tanto de danger quanto gestation são estatisticamente significantes.
+Além de contar com um R\^2 ajustado melhor que os anteriores.
 
 ```{r modelo ajustado}
 model_final <- model_final_lasso
@@ -293,9 +384,13 @@ model_final <- model_final_lasso
 
 # Análise de Resíduos
 
-A análise de resíduos é essencial para verificar se o modelo linear ajustado atende aos pressupostos clássicos da regressão: normalidade dos erros, homocedasticidade, independência e ausência de padrões sistemáticos.
+A análise de resíduos é essencial para verificar se o modelo linear
+ajustado atende aos pressupostos clássicos da regressão: normalidade dos
+erros, homocedasticidade, independência e ausência de padrões
+sistemáticos.
 
 # Normal QQ-plot dos Resíduos
+
 ```{r}
 qqPlot(model_final,
        envelope = 0.95,
@@ -305,32 +400,40 @@ qqPlot(model_final,
 ```{r}
 shapiro.test(residuals(model_final)) # p-valor > 0.05
 ```
-Tendo esses dados em mente, podemos assumir que os erros seguem uma distribuição Normal.
 
+Tendo esses dados em mente, podemos assumir que os erros seguem uma
+distribuição Normal.
 
 # Resíduos VS Valores Ajustados
+
 ```{r}
 par(mfrow = c(1,1))
 plot(model_final, which = 1)
 ```
-A linha forma uma curva.
-→ existe não-linearidade → o modelo linear não está capturando bem a relação.
 
-A largura dos pontos varia ao longo da linha horizontal em y=0.
-→ há indícios de heterocedasticidade.
+A linha forma uma curva. → existe não-linearidade → o modelo linear não
+está capturando bem a relação.
+
+A largura dos pontos varia ao longo da linha horizontal em y=0. → há
+indícios de heterocedasticidade.
 
 # Teste de Heterocedasticidade (Breusch-Pagan)
+
 ```{r}
 install.packages("lmtest")
 library(lmtest)
 bptest(model_final)
 ```
-O p-valor é menor do que 0.05 , então a um nível de 5% de significância rejeitamos H0 e consideramos que o modelo apresenta heterocedasticidade.
 
-Tendo esses resultados em mente, o ideal é fazermos uma transformação de variáveis.
+O p-valor é menor do que 0.05 , então a um nível de 5% de significância
+rejeitamos H0 e consideramos que o modelo apresenta heterocedasticidade.
 
-Uma medida corretiva comum para a não-normalidade e/ou variância não-constante é transformar a variável resposta Y,
-criando uma nova variável Y*.
+Tendo esses resultados em mente, o ideal é fazermos uma transformação de
+variáveis.
+
+Uma medida corretiva comum para a não-normalidade e/ou variância
+não-constante é transformar a variável resposta Y, criando uma nova
+variável Y\*.
 
 # Transformação de Box-Cox
 
@@ -350,7 +453,7 @@ if (abs(lambda) < 1e-6) {
 }
 
 #verificar se o modelo está melhor
-model_box <- lm(y_trans ~ gestation + danger, data = mammals_clean)
+model_box <- lm(y_trans ~ gestation + danger + life_span, data = mammals_clean)
 qqPlot(model_box,
        envelope = 0.95,
        main = "QQ-Plot com Envelope de 95% de Confiança")
@@ -361,16 +464,138 @@ bptest(model_box)
 par(mfrow = c(1,1))
 plot(model_box, which = 1)
 ```
+
 ```{r}
 shapiro.test(residuals(model_box)) # p-valor > 0.05
 ```
+
 # Conclusão Geral da Transformação Box-Cox
+
 Heterocedasticidade: Melhorou significativamente e foi resolvida.
-Normalidade: ERROS CONTINUAM SEGUINDO DISTRIBUIÇÃO NORMAL
-Não parece haver padrão no gráfico Residuos vs Valores Preditos
+Normalidade: ERROS CONTINUAM SEGUINDO DISTRIBUIÇÃO NORMAL Não parece
+haver padrão no gráfico Residuos vs Valores Preditos
 
 (Transformação Box–Cox ajudou)
 
 O modelo foi o que melhor se adequou aos dados.
 
-Agora que já criamos um modelo explicativo, falta criar um modelo preditivo, separando os dados em conjuntos de treino e teste. Treinando com o conjunto de treino e aplicando validação cruzada para avaliar a performance. Depois avaliar a performance final com o conjunto de teste.
+# Bootstrap
+
+Com os problemas de multicolinearidade inexata e heterocedasticidade
+tratadas, podemos buscar estimar a incerteza ao redor dos coeficientes
+ajustados da regressão.
+
+```{r}
+summary(model_box)
+```
+
+```{r}
+library(car) #Para a função Boot()
+set.seed(42) #Para reprodutibilidade
+
+# R=999 é o número de reamostragens bootstrap
+boot_results <- car::Boot(model_box, R = 1999)
+# Resumo do bootstrap (compare com o summary() anterior)
+summary(boot_results)
+
+```
+
+Podemos gerar um histograma dos B=1999 coeficientes estimados. Vamos
+fazer para todos os coeficientes.
+
+```{r}
+hist(boot_results,"gestation")
+```
+
+```{r}
+hist(boot_results,"life_span")
+```
+
+```{r}
+hist(boot_results,"danger")
+```
+
+```{r}
+# Extrair os valores bootstrap do intercepto
+beta0_boot <- boot_results$t[, 1]   # coluna 1 = intercepto
+
+# Calcular quantis (IC 95%)
+ic_percentil <- quantile(beta0_boot, c(0.025, 0.975))
+
+# Plotar histograma
+hist(beta0_boot, 
+     main = "Distribuição Bootstrap do Intercepto",
+     xlab = "Valores do Intercepto (bootstrapped)",
+     breaks = 30,
+     col = "lightgray", 
+     border = "white")
+
+# Adicionar linhas verticais nos percentis
+abline(v = ic_percentil[1], col = "red", lwd = 2)
+abline(v = ic_percentil[2], col = "red", lwd = 2)
+
+# Adicionar linha no valor original do coeficiente
+abline(v = coef(model_box)[1], col = "blue", lwd = 2, lty = 2)
+
+# Mostrar valores
+ic_percentil
+
+```
+
+# Validação Cruzada com K-Folds
+
+Agora que já criamos um modelo explicativo, falta criar um modelo
+preditivo, separando os dados em conjuntos de treino e teste. Treinando
+com o conjunto de treino e aplicando validação cruzada para avaliar a
+performance. Depois avaliar a performance final com o conjunto de teste.
+
+Anteriormente, estávamos interessados em entender a relação entre nossa
+variável resposta `total_sleep` (horas totais de sono por dia) e as
+explicativas. Por conta disso, desejávamos melhorar métricas como o R²,
+avaliar a significância dos coeficientes e ganhar interpretabilidade na
+regressão. Agora, nosso objetivo mudou. Queremos usar as variáveis
+independentes para predizer novos valores da variável dependente, isto
+é, dado que tenhamos uma nova observação, neste caso, a inserção de um
+novo mamífero na base, fundamentados nos dados coletados referentes a
+este, desejamos prever qual será sua quantidade média de horas de sono.
+
+```{r}
+# Garantir reprodutibilidade dos 'folds'
+set.seed(123)
+ctrl<-caret::trainControl(method="cv",number=10)
+
+# 'Treinar' o modelo usando o método 'lm' (linear model)
+# e o controle de 10-fold CV
+modelo.cv <- caret::train(total_sleep ~ body_wt + brain_wt + life_span + gestation + 
+    predation + exposure + danger, 
+    data=mammals_clean, 
+    method="lm", 
+    trControl=ctrl)
+
+print(modelo.cv)
+```
+
+Não conseguimos concluir nada olhando para as métricas retornadas (RMSE,
+R², MAE) por si só. Dessa forma, pode ser útil comparar com outra versão
+apropriada do K-Folds. Como o tamanho da amostra é pequeno (42), podemos
+comparar com o método LOOCV, que forma n folds, sendo n o tamanho da
+amostra, treinando com n-1 folds e testando em um.
+
+```{r}
+set.seed(123)
+
+ctrl <- caret::trainControl(method = "LOOCV")
+
+modelo.loocv <- caret::train(
+  total_sleep ~ body_wt + brain_wt + life_span + gestation +
+    predation + exposure + danger,
+  data = mammals_clean,
+  method = "lm",
+  trControl = ctrl
+)
+
+print(modelo.loocv)
+```
+
+Observe que há aumento no erro quadrático médio (RMSE) e no erro médio absoluto (MAE), mas redução no R² - o que indica menor explicabilidade pelo modelo. Este último não é um grande problema, dado que estamos interessados no caráter preditivo do modelo. Com apenas 42 observações, o método LOOCV gera alta variância nas estimativas, pois cada treino é feito com quase toda a base e cada observação tem grande influência no erro final. Isso tende a aumentar o RMSE e o MAE e reduzir o R². Já o k-fold (k=10) reduz a variância ao usar partições maiores, produzindo estimativas mais estáveis. Por isso, no nosso caso, o 10-fold apresentou erros menores e R² maior, indicando melhor equilíbrio entre viés e variância para esse tamanho de amostra.
+Assim sendo, como nosso foco é a capacidade de previsão do modelo, o método k-fold parece ser o mais adequado, o que vai de encontro com a ideia de sua posição como 'padrão ouro' da validação cruzada.
