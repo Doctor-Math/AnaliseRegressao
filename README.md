@@ -189,6 +189,12 @@ O modelo final apresentou bom ajuste, erros normalizados e variância constante.
 
 ---
 
+## 📜 Licença
+
+Este projeto está licenciado sob a **MIT License**.
+
+---
+
 ## 📬 Contato
 
 Dúvidas, sugestões ou melhorias são bem-vindas.
