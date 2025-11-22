@@ -157,11 +157,27 @@ O modelo final apresentou bom ajuste, erros normalizados e variância constante.
 ## 📁 Estrutura do Repositório
 
 ```
-├── dataset/
-│   └── mammals.csv
-├── codigo/
-│   └── analise_regressao.Rmd
-├── README.md
+├── dataset/                     # Dados brutos utilizados na análise
+│   └── mammals.csv              # Base com informações das espécies
+├── codigo/                      # Código-fonte do projeto
+│   └── analise_regressao.Rmd    # Arquivo principal de análise estatística
+├── doc/                         # Documentação final
+│   └── TP___Análise_de_Regressão.pdf   # Relatório em PDF
+├── ilustracoes/                 # Imagens ilustrativas externas
+├── imagens/                     # Gráficos e imagens geradas na análise
+├── libs/                        # Dependências HTML/CSS/JS geradas automaticamente
+├── Slides_files/                # Arquivos auxiliares dos slides (Xaringan)
+│   ├── figure-html/             # Gráficos exportados dos slides
+│   ├── header-attrs-2.30/       # Metadados usados pelo RMarkdown
+│   └── remark-css-0.0.1/        # Estilos do Xaringan
+├── .gitignore                   # Arquivos e pastas ignorados pelo Git
+├── README.md                    # Documentação geral do repositório
+├── Rmarkdown_Regressao.Rmd      # Relatório analítico em RMarkdown
+├── Rmarkdown_Regressao.html     # Relatório renderizado em HTML
+├── Slides.Rmd                   # Código dos slides da apresentação
+├── Slides.html                  # Slides renderizados
+└── project.Rproj                # Projeto do RStudio/Posit
+
 ```
 
 ---
